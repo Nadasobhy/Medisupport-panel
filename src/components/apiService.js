@@ -28,6 +28,7 @@ export const sendRequest = async (method, url, data, accessToken) => {
     handleRequestError(error);
   }
 };
+
 export const loginadmin = async (userloginData, setAccessToken) => {
   try {
     const response = await axios.post(
@@ -47,6 +48,30 @@ export const loginadmin = async (userloginData, setAccessToken) => {
 export const saveTokenToLocalStorage = (accessToken) => {
   localStorage.setItem("accessToken", accessToken);
 };
+// registerDoctor
+export const RegisterNewDoctor = async (doctorData, accessToken) => {
+  const formData = new FormData();
+  Object.keys(doctorData).forEach((key) => {
+    formData.append(key, doctorData[key]);
+  });
+
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/auth/doctor/register`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    handleRequestError(error);
+  }
+};
+
 //logoutUser
 export const logoutadmin = async (accessToken) => {
   try {
@@ -130,7 +155,6 @@ export const deleteDoctor = async (doctorId, accessToken) => {
     handleRequestError(error);
   }
 };
-
 // getDoctorsCount
 export const getDoctorsCount = async (accessToken) => {
   try {
@@ -140,7 +164,6 @@ export const getDoctorsCount = async (accessToken) => {
     handleRequestError(error);
   }
 };
-
 //getFirstEightDoctors
 export const getFirstEightDoctors = async (accessToken) => {
   try {
@@ -155,9 +178,8 @@ export const getFirstEightDoctors = async (accessToken) => {
     handleRequestError(error);
   }
 };
-
 //getAllUsers
-export const getAllUsers = async (accessToken,page) => {
+export const getAllUsers = async (accessToken, page) => {
   try {
     const users = await sendRequest(
       "GET",
@@ -170,7 +192,6 @@ export const getAllUsers = async (accessToken,page) => {
     handleRequestError(error);
   }
 };
-
 // countAllUsers
 export const countAllUsers = async (accessToken) => {
   try {
@@ -180,7 +201,6 @@ export const countAllUsers = async (accessToken) => {
     handleRequestError(error);
   }
 };
-
 //getFirstEightUsers
 export const getFirstEightUsers = async (accessToken) => {
   try {
@@ -195,19 +215,57 @@ export const getFirstEightUsers = async (accessToken) => {
     handleRequestError(error);
   }
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
+//getAllNotifications
+export const getAllNotifications = async (accessToken) => {
+  try {
+    const response = await axios({
+      method: "GET",
+      url: `${BASE_URL}/auth/doctor/notifications`,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    handleRequestError(error);
+  }
+};
+//readNotification
+export const readNotification = async (accessToken, notificationId) => {
+  try {
+    const response = await axios({
+      method: "PUT",
+      url: `${BASE_URL}/auth/doctor/notifications/${notificationId}`,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    handleRequestError(error);
+  }
+};
+//markAllUnreadNotificationsAsRead
+export const markAllUnreadNotificationsAsRead = async (accessToken) => {
+  try {
+    const response = await axios({
+      method: "POST",
+      url: `${BASE_URL}/auth/doctor/notifications/mark-all-read`,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    handleRequestError(error);
+  }
+};
 
 //Doctor
 export const logindoctor = async (userloginData, setAccessToken) => {
@@ -226,34 +284,63 @@ export const logindoctor = async (userloginData, setAccessToken) => {
     handleRequestError(error);
   }
 };
+export const getDoctorProfile = async (accessToken) => {
+  try {
+    const userProfile = await sendRequest(
+      "GET",
+      "/auth/doctor/user-profile",
+      null,
+      accessToken
+    );
+    return userProfile;
+  } catch (error) {
+    handleRequestError(error);
+  }
+};
+export const logoutDoctor = async (accessToken) => {
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/auth/doctor/logout`,
+      {},
+      {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
 
+    if (response.status === 200) {
+      localStorage.removeItem("accessToken");
+    }
+  } catch (error) {
+    console.error("Error logging out:", error);
+  }
+};
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//getAllPatient
+export const getAllPatient = async (accessToken, page) => {
+  try {
+    const doctors = await sendRequest(
+      "GET",
+      `/auth/doctor/fetchLatestMedicalData?page=${page}`,
+      null,
+      accessToken
+    );
+    return doctors;
+  } catch (error) {
+    handleRequestError(error);
+  }
+};
 
 //chaaaaaaaaaaaaaaaaaaaaaaaaaatting
 // Function to get user contacts
-export const getUserContacts = async (accessToken) => {
+export const getDoctorContacts = async (accessToken) => {
   try {
     const response = await sendRequest(
       "GET",
-      "/user/chat/getUserContacts",
+      "/doctor/chat/getDoctorContacts",
       null,
       accessToken
     );
@@ -262,13 +349,12 @@ export const getUserContacts = async (accessToken) => {
     handleRequestError(error);
   }
 };
-
 // Function to authenticate user for chat
-export const userChatAuth = async (socketId, channelName, accessToken) => {
+export const DoctorChatAuth = async (socketId, channelName, accessToken) => {
   try {
     const response = await sendRequest(
       "POST",
-      "/user/chat/auth",
+      "/doctor/chat/auth",
       {
         socket_id: socketId,
         channel_name: channelName,
@@ -283,20 +369,14 @@ export const userChatAuth = async (socketId, channelName, accessToken) => {
 };
 
 // Function to send a message
-export const userSendMessage = async (
-  accessToken,
-  id,
-  message,
-  temporaryMsgId
-) => {
+export const DoctorSendMessage = async (accessToken, id, message) => {
   try {
     const response = await sendRequest(
       "POST",
-      "/user/chat/sendMessage",
+      "/doctor/chat/sendMessage",
       {
         id,
         message,
-        temporary_msg_id: temporaryMsgId,
       },
       accessToken
     );
@@ -307,13 +387,12 @@ export const userSendMessage = async (
   }
 };
 
-
 // Function to fetch user messages
-export const fetchUserMessages = async (accessToken, id) => {
+export const fetchDoctorMessages = async (accessToken, id) => {
   try {
     const response = await sendRequest(
       "POST",
-      "/user/chat/fetchMessages",
+      "/doctor/chat/fetchMessages",
       {
         id,
       },
@@ -326,11 +405,11 @@ export const fetchUserMessages = async (accessToken, id) => {
 };
 
 // Function to download a file
-export const userDownloadFile = async () => {
+export const DoctorDownloadFile = async () => {
   try {
     const response = await sendRequest(
       "GET",
-      "/user/chat/download/file-name-here"
+      "/doctor/chat/download/file-name-here"
     );
     return response;
   } catch (error) {
@@ -338,11 +417,11 @@ export const userDownloadFile = async () => {
   }
 };
 // Function to get user's shared photos
-export const getUserSharedPhotos = async (accessToken, userId) => {
+export const getDoctorSharedPhotos = async (accessToken, userId) => {
   try {
     const response = await sendRequest(
       "POST",
-      "/user/chat/shared",
+      "/doctor/chat/shared",
       {
         user_id: userId,
       },
@@ -355,11 +434,11 @@ export const getUserSharedPhotos = async (accessToken, userId) => {
 };
 
 // Function to delete a conversation
-export const userDeleteConversation = async (accessToken, id) => {
+export const DoctorDeleteConversation = async (accessToken, id) => {
   try {
     const response = await sendRequest(
       "POST",
-      "/user/chat/deleteConversation",
+      "/doctor/chat/deleteConversation",
       {
         id,
       },
@@ -372,11 +451,11 @@ export const userDeleteConversation = async (accessToken, id) => {
 };
 
 // Function to fetch doctor information by ID
-export const userFetchDoctorByID = async (accessToken, id) => {
+export const DoctorFetchDoctorByID = async (accessToken, id) => {
   try {
     const response = await sendRequest(
       "POST",
-      "/user/chat/idInfo",
+      "/doctor/chat/idInfo",
       {
         id,
       },
@@ -389,17 +468,62 @@ export const userFetchDoctorByID = async (accessToken, id) => {
 };
 
 // Function to mark a message as seen
-export const userMakeMessageSeen = async (accessToken, id) => {
+export const DoctorMakeMessageSeen = async (accessToken, id) => {
   try {
     const response = await sendRequest(
       "POST",
-      "/user/chat/makeSeen",
+      "/doctor/chat/makeSeen",
       {
         id,
       },
       accessToken
     );
     return response;
+  } catch (error) {
+    handleRequestError(error);
+  }
+};
+
+// Delete a message
+export const deleteDoctorMessage = async (accessToken, messageId) => {
+  try {
+    const response = await sendRequest(
+      "POST",
+      "/doctor/chat/delete",
+      { id: messageId },
+      accessToken
+    );
+    return response;
+  } catch (error) {
+    handleRequestError(error);
+  }
+};
+
+// Update doctor's password
+export const updateDoctorPassword = async (passwordData, accessToken) => {
+  try {
+    const response = await sendRequest(
+      "PUT",
+      "/doctor/password",
+      passwordData,
+      accessToken
+    );
+    return response;
+  } catch (error) {
+    handleRequestError(error);
+  }
+};
+
+// Fetch all booking counts
+export const getAllBookingCount = async (accessToken) => {
+  try {
+    const bookingCount = await sendRequest(
+      "GET",
+      "/doctor/all-booking-count",
+      null,
+      accessToken
+    );
+    return bookingCount;
   } catch (error) {
     handleRequestError(error);
   }

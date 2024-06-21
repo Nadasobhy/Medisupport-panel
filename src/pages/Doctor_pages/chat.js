@@ -1,18 +1,16 @@
 import { Helmet } from "react-helmet-async";
 import React, { useState, useRef, useEffect } from "react";
 import "./chat.css";
-//import docchat1 from "../images/doc_chat1.jpeg";
 import Dashboarddoc from "./dashboard";
-
+import Pusher from "pusher-js";
 import {
-  getUserContacts,
-  userChatAuth,
-  userMakeMessageSeen,
-  userSendMessage,
-  fetchUserMessages,
-  userFetchDoctorByID,
+  getDoctorContacts,
+  DoctorChatAuth,
+  DoctorMakeMessageSeen,
+  DoctorSendMessage,
+  fetchDoctorMessages,
+  DoctorFetchDoctorByID,
 } from "../../components/apiService.js";
-//import WebSocketClient from "websocket";
 
 const emojis = [
   "😀",
@@ -388,107 +386,75 @@ const emojis = [
 ];
 
 const Chat = () => {
-  //store messages
-  const [messages, setMessages] = useState([]);
-  // emogi
-  //send files
-  const fileInputRef = useRef(null);
-  const [selectedFile, setSelectedFile] = useState(null);
-  //chat
-  //doc
-
-  const selectEmoji = (emoji) => {
-    setCurrentMessage(currentMessage + emoji);
-  };
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-    }
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  // State variables
   const [showDefaultConversation, setShowDefaultConversation] = useState(true);
   const [showSidebar, setShowSidebar] = useState(true);
   const [showChat, setShowChat] = useState(false);
-  const [doctorsData, setDoctorsData] = useState([]);
-  const [selectedDoctorInfo, setSelectedDoctorInfo] = useState(null);
-  const [currentDoctorMessages, setCurrentDoctorMessages] = useState([]);
-  const [currentMessage, setCurrentMessage] = useState("");
+  const [usersData, setDoctorsData] = useState([]);
+  const [selecteduserInfo, setselecteduserInfo] = useState(null);
+  const [currentuserMessages, setcurrentuserMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState("");
   const [showPicker, setShowPicker] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const messagesEndRef = useRef(null);
   const baseURL = "http://127.0.0.1:8000/";
-
-  // Function to fetch user contacts
-  const fetchUserContacts = async () => {
-    try {
-      const accessToken = localStorage.getItem("accessToken");
-      const contacts = await getUserContacts(accessToken);
-      const contactsArray = contacts.contacts;
-
-      // Update doctorsData state
-      setDoctorsData(
-        contactsArray.map((contact) => ({
-          id: contact.user.id,
-          isOnline: contact.user.active_status === 1,
-          contactInfo: {
-            ...contact,
-            user: {
-              ...contact.user,
-              avatar: baseURL + contact.user.avatar,
-            },
-          },
-        }))
-      );
-    } catch (error) {
-      console.error("An error occurred while fetching user contacts:", error);
-    }
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        await fetchUserContacts();
+        const accessToken = localStorage.getItem("accessToken");
+        const contacts = await getDoctorContacts(accessToken);
+        const contactsArray = contacts.contacts;
+        setDoctorsData(
+          contactsArray.map((contact) => ({
+            id: contact.user.id,
+            isOnline: contact.user.active_status === 1,
+            contactInfo: {
+              ...contact,
+              user: {
+                ...contact.user,
+                avatar: baseURL + contact.user.avatar,
+              },
+            },
+          }))
+        );
       } catch (error) {
         console.error("An error occurred while fetching user contacts:", error);
       }
     };
 
-    // Fetch data initially
     fetchData();
 
-    // Setup interval to fetch data periodically
     const interval = setInterval(() => {
       fetchData();
     }, 60000);
 
-    // Cleanup interval on component unmount
     return () => clearInterval(interval);
   }, []);
-
-  const handleDoctorClick = async (doctor) => {
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+      if (window.innerWidth >= 750 && !selecteduserInfo) {
+        setShowSidebar(true);
+        setShowDefaultConversation(true);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [selecteduserInfo]);
+  const handleuserClick = async (doctor) => {
     try {
       const accessToken = localStorage.getItem("accessToken");
-
-      // Fetch doctor information
-      const doctorInfo = await userFetchDoctorByID(accessToken, doctor.id);
-      setSelectedDoctorInfo(doctorInfo.fetch);
-      setCurrentDoctorMessages(doctor.messages);
+      const doctorInfo = await DoctorFetchDoctorByID(accessToken, doctor.id);
+      setselecteduserInfo(doctorInfo.fetch);
+      setcurrentuserMessages(doctor.messages);
       setShowPicker(false);
 
-      // Fetch user messages with the doctor
-      const userMessages = await fetchUserMessages(accessToken, doctor.id);
-      setCurrentDoctorMessages(userMessages.messages);
+      const userMessages = await fetchDoctorMessages(accessToken, doctor.id);
+      setcurrentuserMessages(userMessages.messages);
 
-      // Mark messages as seen
-      await userMakeMessageSeen(accessToken, doctor.id);
+      await DoctorMakeMessageSeen(accessToken, doctor.id);
 
-      // Update sidebar and chat visibility based on window width
       if (windowWidth <= 750) {
         setShowSidebar(false);
         setShowChat(true);
@@ -502,109 +468,63 @@ const Chat = () => {
       );
     }
   };
-
-  const sendMessage = async (e) => {
+  const sendMessage = async (e, message) => {
     e.preventDefault();
-    if (currentMessage.trim() !== "" && selectedDoctorInfo) {
+    if (inputMessage.trim() !== "" && selecteduserInfo) {
       try {
         const accessToken = localStorage.getItem("accessToken");
-        if (!accessToken) {
-          console.error("Access token not found.");
-          return;
-        }
-
-        const response = await userSendMessage(
+        const response = await DoctorSendMessage(
           accessToken,
-          selectedDoctorInfo.id,
-          currentMessage
+          selecteduserInfo.id,
+          inputMessage
         );
-
-        if (response && response.success) {
-          console.log("Message sent successfully:", response);
-
-          const storedMessages =
-            JSON.parse(localStorage.getItem("messages")) || {};
-          const doctorMessages = storedMessages[selectedDoctorInfo.id] || [];
-          doctorMessages.push({
-            body: currentMessage,
-            from_id: "user",
-            created_at: new Date().toISOString(),
-            seen: true,
-          });
-          storedMessages[selectedDoctorInfo.id] = doctorMessages;
-          localStorage.setItem("messages", JSON.stringify(storedMessages));
-
-          setCurrentMessage("");
-        } else {
-          console.error(
-            "Failed to send message:",
-            response && response.error ? response.error : "Unknown error"
-          );
-        }
+        setInputMessage("");
       } catch (error) {
         console.error("An error occurred while sending the message:", error);
       }
     }
   };
-
   useEffect(() => {
     const storedMessages = JSON.parse(localStorage.getItem("messages")) || {};
-    const doctorMessages = storedMessages[selectedDoctorInfo?.id] || [];
-    setCurrentDoctorMessages(doctorMessages);
-  }, [selectedDoctorInfo]);
+    const doctorMessages = storedMessages[selecteduserInfo?.id] || [];
+    setcurrentuserMessages(doctorMessages);
+  }, [selecteduserInfo]);
 
-  const handleResize = () => {
-    setWindowWidth(window.innerWidth);
-    if (window.innerWidth >= 750 && !selectedDoctorInfo) {
-      setShowSidebar(true);
-      setShowDefaultConversation(true);
-    }
-  };
-
-  const handlearrowClick = async () => {
+  const handleArrowClick = async () => {
     try {
       const accessToken = localStorage.getItem("accessToken");
-      if (selectedDoctorInfo) {
-        // Mark messages as seen
-        await userMakeMessageSeen(accessToken, selectedDoctorInfo.id);
+      if (selecteduserInfo) {
+        await DoctorMakeMessageSeen(accessToken, selecteduserInfo.id);
       }
 
-      setSelectedDoctorInfo(null);
+      setselecteduserInfo(null);
       setShowChat(false);
       setShowPicker(false);
     } catch (error) {
       console.error("An error occurred while marking messages as seen:", error);
     }
   };
-
   useEffect(() => {
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [selectedDoctorInfo]);
-
-  useEffect(() => {
-    if (!selectedDoctorInfo && !showChat && windowWidth >= 750) {
+    if (!selecteduserInfo && !showChat && windowWidth >= 750) {
       setShowDefaultConversation(true);
     } else {
       setShowDefaultConversation(false);
     }
-  }, [selectedDoctorInfo, showChat, windowWidth]);
+  }, [selecteduserInfo, showChat, windowWidth]);
 
   useEffect(() => {
-    if (!selectedDoctorInfo && windowWidth >= 750) {
+    if (!selecteduserInfo && windowWidth >= 750) {
       setShowSidebar(true);
     }
-  }, [selectedDoctorInfo, windowWidth]);
+  }, [selecteduserInfo, windowWidth]);
 
   useEffect(() => {
-    if (selectedDoctorInfo && windowWidth < 750) {
+    if (selecteduserInfo && windowWidth < 750) {
       setShowSidebar(false);
     } else {
       setShowSidebar(true);
     }
-  }, [selectedDoctorInfo, windowWidth]);
+  }, [selecteduserInfo, windowWidth]);
   const formatTime = (createdAt) => {
     const date = new Date(createdAt);
     const hours = date.getHours();
@@ -612,7 +532,43 @@ const Chat = () => {
     const minutes = ("0" + date.getMinutes()).slice(-2);
     const period = hours >= 12 ? "PM" : "AM";
     return `${displayHours}:${minutes} ${period}`;
-};
+  };
+  const selectEmoji = (emoji) => {
+    setInputMessage((prevMessage) => prevMessage + emoji);
+  };
+  useEffect(() => {
+    const authenticateUserForChat = async () => {
+      try {
+        const socketId = "9013.50262712";
+        const channelName = "private-chatify";
+        const accessToken = localStorage.getItem("accessToken");
+
+        const response = await DoctorChatAuth(socketId, channelName, accessToken);
+
+        console.log("Authentication response:", response);
+      } catch (error) {
+        console.error("An error occurred during chat authentication:", error);
+      }
+    };
+
+    authenticateUserForChat();
+  }, []);
+  useEffect(() => {
+    Pusher.logToConsole = true;
+    const pusher = new Pusher("699bcc950016f00a1982", {
+      cluster: "eu",
+      authEndpoint: 'http://localhost:3000/pusher/auth',
+
+    });
+    const channel = pusher.subscribe("private-chatify"); 
+    channel.bind("messaging", function (data) {
+      setcurrentuserMessages(prevMessages => [...prevMessages, data]);
+    });
+    return () => {
+      pusher.unsubscribe("private-chatify"); 
+      pusher.disconnect();
+    };
+  }, []);
 
   return (
     <>
@@ -626,18 +582,18 @@ const Chat = () => {
         />{" "}
       </Helmet>
       <div className="chatt">
-      <Dashboarddoc />
+        <Dashboarddoc />
         <div className="chatting">
           <div className={showSidebar ? "sidebarchat" : "sidebarchat-hidden"}>
             <h3 style={{ display: showSidebar ? "block" : "none" }}>
               Messages
             </h3>
-            <div className="sidebar">
-              {doctorsData.map((doctor) => (
+            <div className="sidedoc">
+              {usersData.map((doctor) => (
                 <div
                   key={doctor.id}
                   className="doctorschat"
-                  onClick={() => handleDoctorClick(doctor)}
+                  onClick={() => handleuserClick(doctor)}
                 >
                   <div className="slide">
                     <div className="doctorAvatarContainer">
@@ -655,12 +611,10 @@ const Chat = () => {
                     <div className="doctorInfo">
                       <div className="doctortext">
                         <div className="doctorName">
-                          {doctor.contactInfo.user.first_name}{" "}
+                          {doctor.contactInfo.user.name}{" "}
                           {doctor.contactInfo.user.last_name}
                         </div>
-                        <div className="doctorSpeciality">
-                          {doctor.contactInfo.user.specialization}
-                        </div>
+
                         <div
                           className="lastMessage"
                           style={{
@@ -692,34 +646,34 @@ const Chat = () => {
               ))}
             </div>
           </div>
-          {selectedDoctorInfo && showChat && (
+          {selecteduserInfo && showChat && (
             <div className="chatm">
               <div className="doctorinfor">
-                <div className="convback" onClick={handlearrowClick}>
+                <div className="convback" onClick={handleArrowClick}>
                   <i className="fa-solid fa-arrow-left"></i>
                 </div>
-                {selectedDoctorInfo && (
+                {selecteduserInfo && (
                   <div className="contactimgchat">
                     <div className="imgd">
                       <img
-                        src={baseURL + selectedDoctorInfo.avatar}
+                        src={baseURL + selecteduserInfo.avatar}
                         alt="contact-img"
                         className="zoomedImagechat"
                       />
                     </div>
-                    {selectedDoctorInfo.isOnline && (
+                    {selecteduserInfo.isOnline && (
                       <div className="onlineIndicator"></div>
                     )}
                   </div>
                 )}
-                {selectedDoctorInfo && (
+                {selecteduserInfo && (
                   <div className="infor">
                     <h3>
-                      {selectedDoctorInfo.first_name}{" "}
-                      {selectedDoctorInfo.last_name}
+                      {selecteduserInfo.name}{" "}
+                      {selecteduserInfo.last_name}
                     </h3>
                     <p>
-                      {selectedDoctorInfo.active_status === 1
+                      {selecteduserInfo.active_status === 1
                         ? "Online"
                         : "Offline"}
                     </p>
@@ -727,24 +681,24 @@ const Chat = () => {
                 )}
               </div>
 
-              {selectedDoctorInfo && showChat && (
+              {selecteduserInfo && showChat && (
                 <div
                   className={`chat-container ${
-                    selectedDoctorInfo.specialization
-                      ? selectedDoctorInfo.specialization.toLowerCase() +
+                    selecteduserInfo.specialization
+                      ? selecteduserInfo.specialization.toLowerCase() +
                         "-chat"
                       : ""
                   }`}
                   onClick={() => setShowPicker(false)}
                 >
-                  {currentDoctorMessages &&
-                    currentDoctorMessages.length > 0 && (
+                  {currentuserMessages &&
+                    currentuserMessages.length > 0 && (
                       <div className="chat-messages">
-                        {currentDoctorMessages.map((message) => (
+                        {currentuserMessages.map((message) => (
                           <div
                             key={message.id}
                             className={`message ${
-                              message.from_id === selectedDoctorInfo.id
+                              message.from_id === selecteduserInfo.id
                                 ? "doctor"
                                 : "user"
                             }`}
@@ -752,7 +706,7 @@ const Chat = () => {
                             <span>{message.body}</span>
                             <span
                               className={`message-time ${
-                                message.from_id === selectedDoctorInfo.id
+                                message.from_id === selecteduserInfo.id
                                   ? "doctor-time"
                                   : "user-time"
                               }`}
@@ -763,7 +717,7 @@ const Chat = () => {
                                 width="16"
                                 height="16"
                                 fill={message.seen ? "#00bbff" : "currentColor"}
-                                class="bi bi-check-all"
+                                className="bi bi-check-all"
                                 viewBox="0 0 16 16"
                               >
                                 <path d="M8.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L2.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093L8.95 4.992zm-.92 5.14.92.92a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 1 0-1.091-1.028L9.477 9.417l-.485-.486z" />
@@ -827,19 +781,17 @@ const Chat = () => {
                     <textarea
                       className="textarea"
                       placeholder="Type a message..."
-                      value={currentMessage}
-                      onChange={(e) => setCurrentMessage(e.target.value)}
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
                     />
                   </div>
                   <div
                     className="input-icon"
-                    onClick={() => fileInputRef.current.click()}
                   >
                     <input
                       type="file"
-                      ref={fileInputRef}
+                    
                       style={{ display: "none" }}
-                      onChange={handleFileUpload}
                     />
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
