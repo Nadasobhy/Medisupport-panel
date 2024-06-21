@@ -1,0 +1,207 @@
+.profile {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
+
+.profile .profile-container {
+    flex: 1; 
+    min-width: calc(100% - 320px);
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+                                        /*image*/
+
+.profile .profile-container .profile-doc .image img{
+  display: flex;
+  width: 30%;
+  height: 20vw;
+  margin:5% 0 0 33%;
+  border-radius: 50%;
+  background-size: contain;
+  position: relative;
+  background-color: #BE0202;
+}
+
+.profile .profile-container .profile-doc .edit{
+    display: flex;
+    width: 100%;
+    padding-left: 37rem;
+    margin-top: -5rem;
+    position: absolute;
+}
+  
+.profile .profile-container .profile-doc .edit button{
+    display: flex;
+    position: absolute;
+    background: none;
+    border: none;
+}
+  
+.profile .profile-container .profile-doc .edit button .upload{
+    color: var(--Red);
+    width: 15%;
+    height: 20%;
+    margin: 2% 0 0 1%;
+}
+
+                                    /*doctorname*/
+
+.profile .profile-container .profile-doc h4{
+    display: flex;
+    color: #BE0202;
+    font-family: 'Roboto',sans-serif;
+    font-size: 2.3rem;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    margin: 3% 0 0 33%;
+}
+
+                                        /*Doctor-info*/
+
+.profile .profile-container .profile-doc .info h4{
+    height: 2.652%;
+    color: #1F1F1F;
+    font-family: 'Roboto',sans-serif;
+    font-size: 2.3rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 110%; /* 2.2rem */
+    margin: 2% 0 0 41%;
+  
+}
+  
+.profile .profile-container .profile-doc .info label{
+    color: #1F1F1F;
+    font-family: 'Roboto',sans-serif;
+    font-size: 1.3rem;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 140%; /* 1.225rem */
+}
+  
+.profile .profile-container .profile-doc .info input{
+    display: flex;
+    width: 35%;
+    height: 3rem;
+    border: 0.12rem solid var(--Red);
+    border-radius: 0.6rem;
+    padding: 1.7rem;
+    margin-top: 1rem;
+}
+  
+                            /* section-inputs */
+  
+.profile .profile-container .profile-doc .info .inputs{
+    gap:2%;
+}
+  
+.profile .profile-container .profile-doc .info .inputs .name{
+    gap:2%;
+    margin: 2% 0 0 20%;
+}
+  
+.profile .profile-container .profile-doc .info .inputs .name .l-name{
+    width: 100%;
+    margin: -12.3% 0 0 38%;
+}
+  
+.profile .profile-container .profile-doc .info .inputs .special{
+    width: 167%;
+    margin: 2% 0 0 20%;
+}
+
+.profile .profile-container .profile-doc .info .inputs .email{
+    width: 167%;
+    margin: 2% 0 0 20%;
+}
+
+.profile .profile-container .profile-doc .info .inputs .phone{
+    width: 167%;
+    margin: 2% 0 0 20%;
+}
+
+.profile .profile-container .profile-doc .info .inputs .location{
+    width: 167%;
+    margin: 2% 0 0 20%;
+}
+
+.profile .profile-container .profile-doc .info .inputs .bio{
+    width: 167%;
+    margin: 2% 0 0 20%;
+}
+
+.profile .profile-container .profile-doc .info .inputs .price{
+    width: 167%;
+    margin: 2% 0 0 20%;
+}
+
+.profile .profile-container .profile-doc .info .inputs .pass{
+   position: relative;
+   width: 167%;
+    margin: 2% 0 0 20%;
+}
+   
+.profile .profile-container .profile-doc .info .inputs .pass button{
+    display: flex;
+    position: absolute;
+    margin: -1.6% 0 0 33%;
+    background: none;
+    border: none;
+}
+  
+.profile .profile-container .profile-doc .info .inputs .confirm{
+    position: relative;
+    width: 167%;
+    margin: 2% 0 0 20%;
+}
+   
+.profile .profile-container .profile-doc .info .inputs .confirm button{
+    display: flex;
+    position: absolute;
+    margin: -1.6% 0 0 33%;
+    background: none;
+    border: none;
+}
+ 
+                                    /*save-button*/
+
+.profile .profile-container .profile-doc .save button{
+    width: 58%;
+    background-color: var(--Red);
+    color: white;
+    font-family: 'Roboto',sans-serif;
+    font-size: 1.3rem;
+    border: none;
+    border-radius: 0.6rem;
+    padding: 1% 0 ;
+    margin: 2% 0 2% 20%;
+}
+  
+.profile .profile-container .profile-doc .save button:hover{
+    cursor: pointer;
+    background-color: var(--secondaryColor);
+    color: var(--Red);
+    border: none;
+}
+
+                                    /*overlay*/
+                                    
+.profile .profile-container .profile-doc .save .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 273vh;
+    background: rgba(18, 22, 25, 0.65);
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}

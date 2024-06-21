@@ -22,8 +22,8 @@ import Chat from "./pages/Doctor_pages/chat";
 import Patients from "./pages/Doctor_pages/patients"
 import Appointments from "./pages/Doctor_pages/appointments"
 import Article from "./pages/Doctor_pages/articles";
-import Makeappointment from "./pages/Doctor_pages/makeappointment"
-import Profile from "./pages/Doctor_pages/profile"
+import Makeappointment from "./pages/Doctor_pages/makeappointment";
+import Profile from "./pages/Doctor_pages/profile";
 import Rooms from "./pages/Doctor_pages/rooms";
 
 const router = createBrowserRouter([
